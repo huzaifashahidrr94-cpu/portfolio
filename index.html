@@ -703,6 +703,13 @@ footer{border-top:1px solid var(--line2);padding:64px 0 44px;position:relative;z
 .data-panel .dp-grid div b{font-family:var(--disp);font-weight:400;font-size:22px;display:block;color:#fff}
 .data-panel .dp-grid div span{font-size:12px;color:var(--muted)}
 .pm-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.pm-case{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;margin-top:20px;padding:16px 18px;border:1.5px solid var(--red);border-radius:14px;background:var(--red-dim);color:var(--ink);text-align:left;transition:transform .25s,box-shadow .25s}
+.pm-case:hover{transform:translateY(-2px);box-shadow:0 16px 32px -14px rgba(138,95,14,.55)}
+.pm-case b{font-family:var(--disp);font-weight:400;font-size:19px;letter-spacing:.05em;text-transform:uppercase;display:block}
+.pm-case small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.pm-case .pm-case-arrow{font-size:22px;color:var(--red);flex:none}
+.pm-case-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+#caseModal .tag{margin-right:52px}
 @media(max-width:820px){.pm-grid{grid-template-columns:1fr}.pm-left{border-right:0;border-bottom:1px solid var(--line2)}.pm-right{max-height:none}.shot-lg .shot-body{min-height:220px}}
 
 /* ---------- floats ---------- */
@@ -1301,6 +1308,7 @@ d.addEventListener('keydown',function(e){if(e.key==='Escape')$$('.modal.open').f
 
 function openCase(key){
   var c=CASES[key];if(!c)return;
+  $('#caseKpis').style.display='';
   $('#caseRegion').textContent=c.region+' · '+c.span;
   $('#caseTitle').textContent=c.headline;
   $('#caseIntro').textContent=c.niche;
@@ -1396,9 +1404,10 @@ function openProject(idx){
   if(p.c)h+=' <span class="pill">'+esc(p.c)+'</span>';
   h+='<p style="margin-top:14px">'+esc(p.desc)+'</p>';
   h+='<p class="kicker-note">'+esc(p.tags)+'</p>';
+  h+='<button class="pm-case" type="button" data-projcase="'+idx+'"><span><b>Read the Case Study</b><small>What I did for this business — and the result, in plain words</small></span><span class="pm-case-arrow">\u2192</span></button>';
   h+='<h4>What I Delivered</h4><ul class="deliv">'+deliv.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>';
   if(p.top)h+='<div class="top3-box"><b>Ranked in the Google Maps Top 3 Local Pack</b><span>For the core money keywords in their market</span></div>';
-  if(p.ads){
+  if(idx===1){
     h+='<div class="data-panel"><h5>Google Business Profile · Verified · May–Oct</h5><div class="dp-grid"><div><b>361</b><span>calls from Maps</span></div><div><b>1,104</b><span>profile interactions</span></div><div><b>597</b><span>website clicks</span></div><div><b>303</b><span>direction requests</span></div></div></div>';
     h+='<div class="data-panel"><h5>Google Ads · Campaign built & managed</h5><div class="dp-grid"><div><b>109</b><span>call leads</span></div><div><b>1.31M</b><span>impressions</span></div><div><b>$0.75</b><span>avg. CPC</span></div><div><b>$28.3K</b><span>ad spend</span></div></div></div>';
     h+='<p style="font-size:13.5px;margin-top:14px">Straight from the live accounts — full screenshots in the \u2018Real accounts. Real numbers.\u2019 strip above.</p>';
@@ -1411,8 +1420,45 @@ function openProject(idx){
   if(p.st!=='offline')h+='<a class="btn btn-red" href="'+esc(p.u)+'" target="_blank" rel="noopener">Open Live Site ↗</a>';
   h+='<a class="btn btn-ghost" href="#contact" data-closelink="projModal">Build Me One Like This</a></div>';
   $('#pmBody').innerHTML=h;
+  var pcb=$('#pmBody [data-projcase]');if(pcb)pcb.addEventListener('click',function(){openProjCase(+pcb.getAttribute('data-projcase'))});
   $$('#pmBody [data-closelink]').forEach(function(b){b.addEventListener('click',function(){closeModal('projModal')})});
   openModal('projModal');
+}
+
+
+/* ---------- V13: per-project case study (reuses the case modal) ----------
+   Content is built ONLY from report.md: the delivered checklist, the Top 3
+   Map Pack box, the three result lines / offline notice. Real numbers exist
+   ONLY for #2 All About Additions (idx 1) — every other project shows its
+   work and its Map Pack result with NO invented figures. */
+function openProjCase(idx){
+  var p=PROJECTS[idx];if(!p)return;
+  closeModal('projModal');
+  var deliv=DELIV.slice();if(p.ads)deliv.push(DELIV_ADS);
+  $('#caseRegion').textContent='Case Study \u00b7 '+p.cat+(p.c?' \u00b7 '+p.c:'');
+  $('#caseTitle').textContent=p.n;
+  $('#caseIntro').textContent=p.desc;
+  var kp=$('#caseKpis');
+  if(idx===1){
+    kp.style.display='';
+    kp.innerHTML='<div><b>361</b><span>calls from Maps \u00b7 May\u2013Oct</span></div><div><b>1,104</b><span>profile interactions \u00b7 May\u2013Oct</span></div><div><b>597</b><span>website clicks \u00b7 May\u2013Oct</span></div><div><b>303</b><span>direction requests \u00b7 May\u2013Oct</span></div>';
+  }else{kp.style.display='none';kp.innerHTML=''}
+  var h='<h4>What I did</h4><ul class="deliv">'+deliv.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>';
+  h+='<h4>The result</h4>';
+  if(p.top)h+='<div class="top3-box"><b>Ranked in the Google Maps Top 3 Local Pack</b><span>For the core money keywords in their market</span></div>';
+  if(idx===1){
+    h+='<div class="data-panel"><h5>Google Ads \u00b7 Campaign built & managed</h5><div class="dp-grid"><div><b>109</b><span>call leads</span></div><div><b>1.31M</b><span>impressions</span></div><div><b>$0.75</b><span>avg. CPC</span></div><div><b>$28.3K</b><span>ad spend</span></div></div></div>';
+    h+='<p style="font-size:13.5px;margin-top:14px">Straight from the live accounts \u2014 full screenshots in the \u2018Real accounts. Real numbers.\u2019 strip above.</p>';
+  }else if(p.st==='offline'){
+    h+='<div class="offline-note">This site is temporarily offline right now \u2014 new snapshot coming. Ask me about the build on a call.</div>';
+  }else{
+    h+='<div class="pm-lines"><div>Top 3 on Google Maps \u2014 tracked & reported monthly</div><div>Every call & lead measured \u2014 I\u2019ll walk you through the numbers on a call</div><div>Rankings, reviews and profile health monitored continuously</div></div>';
+  }
+  h+='<div class="pm-case-btns"><button class="btn btn-ghost" type="button" data-backproj="'+idx+'">\u2190 Back to project</button><a class="btn btn-red" href="#contact" data-closelink="caseModal">Build Me One Like This</a></div>';
+  $('#caseBody').innerHTML=h;
+  var bb=$('#caseBody [data-backproj]');if(bb)bb.addEventListener('click',function(){closeModal('caseModal');openProject(+bb.getAttribute('data-backproj'))});
+  $$('#caseBody [data-closelink]').forEach(function(b){b.addEventListener('click',function(){closeModal('caseModal')})});
+  openModal('caseModal');
 }
 
 /* ---------- project cards: THE RIVER (all 54 fly) + browse grid ---------- */
@@ -1429,7 +1475,7 @@ function filteredProjects(){
 }
 function cardHTML(x){
   var p=x.p;
-  return '<button class="fly-card" data-idx="'+x.i+'" aria-label="'+esc(p.n)+' — view project details"><span class="fc-tip">'+esc(p.n)+' — view details</span>'+shotHTML(p,false)+'<span class="fc-body" style="display:block"><h3>'+esc(p.n)+'</h3><span class="fc-meta">'+esc(p.cat)+(p.c?' · '+esc(p.c):'')+'</span></span></button>';
+  return '<button class="fly-card" data-idx="'+x.i+'" aria-label="'+esc(p.n)+' — view project details"><span class="fc-tip">'+esc(p.n)+' — view details &amp; case study</span>'+shotHTML(p,false)+'<span class="fc-body" style="display:block"><h3>'+esc(p.n)+'</h3><span class="fc-meta">'+esc(p.cat)+(p.c?' · '+esc(p.c):'')+'</span></span></button>';
 }
 var gridIO=('IntersectionObserver' in w)?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');gridIO.unobserve(e.target);setTimeout(function(){e.target.style.transitionDelay=''},950)}})},{threshold:.06,rootMargin:'0px 0px 14% 0px'}):null;
 function renderGrid(){
@@ -1441,7 +1487,7 @@ function renderGrid(){
     c.style.transitionDelay=((i%12)*0.045)+'s';
     if(reduced||!gridIO)c.classList.add('in');else gridIO.observe(c);
   });
-  $('#projCount').textContent='Showing '+Math.min(projShown,rows.length)+' of '+rows.length+' projects'+(projNiche!=='All'?' in '+projNiche:'')+' — tap any card for its full details and screenshot.';
+  $('#projCount').textContent='Showing '+Math.min(projShown,rows.length)+' of '+rows.length+' projects'+(projNiche!=='All'?' in '+projNiche:'')+' — tap any card for its full details, screenshot and case study.';
   var more=$('#projMore');
   more.style.display=rows.length>projShown?'':'none';
   more.textContent='Load more projects ('+Math.min(projShown,rows.length)+' of '+rows.length+' shown)';
@@ -2120,6 +2166,8 @@ footer{background:linear-gradient(180deg,transparent,rgba(238,226,196,.7))!impor
 #waFloat .wa-ic{color:#fff}
 .result{background:linear-gradient(150deg,rgba(238,194,106,.35),rgba(255,255,255,.9))}
 .result-grid div{background:rgba(255,255,255,.75)}
+.data-panel{background:rgba(29,36,51,.05)}
+.data-panel .dp-grid div b{color:#1d2433}
 .bar-track,.meter,.diff-track,.daytrack{background:rgba(29,36,51,.12)}
 .searchbar,.hv-search{background:#fff}
 input[type=search],.proj-tools input{background:#fff!important;color:var(--ink)}
